@@ -33,6 +33,7 @@ import type {
   ExperimentalConsoleSwitchOrgResponses,
   ExperimentalResourceListResponses,
   ExperimentalSessionListResponses,
+  ExperimentalTitleGenerateErrors,
   ExperimentalTitleGenerateResponses,
   ExperimentalWorkspaceAdaptorListResponses,
   ExperimentalWorkspaceCreateErrors,
@@ -930,6 +931,51 @@ export class Console extends HeyApiClient {
   }
 }
 
+export class Title extends HeyApiClient {
+  /**
+   * Generate conversation title
+   *
+   * Generate a short conversation title with the configured lite model and deterministic fallback.
+   */
+  public generate<ThrowOnError extends boolean = false>(
+    parameters: {
+      directory?: string
+      workspace?: string
+      text: string
+      locale?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "text" },
+            { in: "body", key: "locale" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ExperimentalTitleGenerateResponses,
+      ExperimentalTitleGenerateErrors,
+      ThrowOnError
+    >({
+      url: "/experimental/title",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Session extends HeyApiClient {
   /**
    * List sessions
@@ -1006,23 +1052,6 @@ export class Resource extends HeyApiClient {
   }
 }
 
-export class Title extends HeyApiClient {
-  public generate<ThrowOnError extends boolean = false>(parameters?: { directory?: string; workspace?: string; text?: string; locale?: string }, options?: Options<never, ThrowOnError>) {
-    const params = buildClientParams([parameters], [{ args: [
-      { in: "query", key: "directory" },
-      { in: "query", key: "workspace" },
-      { in: "body", key: "text" },
-      { in: "body", key: "locale" },
-    ] }])
-    return (options?.client ?? this.client).post<ExperimentalTitleGenerateResponses, unknown, ThrowOnError>({
-      url: "/experimental/title",
-      ...options,
-      ...params,
-      headers: { "Content-Type": "application/json", ...options?.headers, ...params.headers },
-    })
-  }
-}
-
 export class Experimental extends HeyApiClient {
   private _workspace?: Workspace
   get workspace(): Workspace {
@@ -1034,14 +1063,14 @@ export class Experimental extends HeyApiClient {
     return (this._console ??= new Console({ client: this.client }))
   }
 
-  private _session?: Session
-  get session(): Session {
-    return (this._session ??= new Session({ client: this.client }))
-  }
-
   private _title?: Title
   get title(): Title {
     return (this._title ??= new Title({ client: this.client }))
+  }
+
+  private _session?: Session
+  get session(): Session {
+    return (this._session ??= new Session({ client: this.client }))
   }
 
   private _resource?: Resource
