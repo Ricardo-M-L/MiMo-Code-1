@@ -4098,7 +4098,19 @@ export type WorktreeResetResponse = WorktreeResetResponses[keyof WorktreeResetRe
 
 export type ExperimentalTitleGenerateData = {
   body: {
-    text: string
+    text?: string
+    parts?: Array<
+      | {
+          type: "text"
+          text: string
+        }
+      | {
+          type: "image"
+          data: string
+          mime: "image/jpeg" | "image/png" | "image/webp" | "image/gif"
+          filename?: string
+        }
+    >
     locale?: string
   }
   path?: never
